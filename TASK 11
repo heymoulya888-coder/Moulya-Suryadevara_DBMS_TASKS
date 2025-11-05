@@ -1,0 +1,158 @@
+[10:23 PM, 11/5/2025] Moulya Suryadevara: # 🏥 Healthcare Management System – ER Model
+
+##  Title:
+*Conceptual Design using ER Model – Healthcare Management System*
+
+---
+
+##  Tools Required:
+- [draw.io](https://draw.io) (or Creately / ERDPlus)
+- GitHub (for project submission)
+
+---
+
+## Steps Involved in Creating ER Diagram
+
+### Step 1: Problem Understanding & Requirement Analysis
+Analyze the real-world application: *Healthcare Management System*  
+Understand the domain: *Hospitals, Patients, Doctors, Appointments, Prescriptions*
+
+---
+
+### Step 2: Identify Major Entities
+- Patient  
+- Doctor  
+- Appointment  
+- Prescription  
+- Medicine  
+- Department  
+
+---
+
+### Step 3: Identify Attributes for Each Entity
+
+| *Entity* | *Attributes* |
+|-------------|----------------|
+| Patient | PatientID (PK), Name, …
+[10:26 PM, 11/5/2025] Moulya Suryadevara: -- ============================================================
+--  DATABASE DESIGN FOR HEALTHCARE MANAGEMENT SYSTEM
+-- Used for Oracle Forms, Menus, and Report Builder
+-- Step 1: Create Table - Department
+CREATE TABLE Department (
+    DepartmentID NUMBER(5) PRIMARY KEY,
+    DeptName VARCHAR2(50),
+    Location VARCHAR2(50)
+);
+
+-- Step 2: Create Table - Doctor
+CREATE TABLE Doctor (
+    DoctorID NUMBER(5) PRIMARY KEY,
+    Name VARCHAR2(50),
+    Specialization VARCHAR2(50),
+    ContactNo VARCHAR2(15),
+    DepartmentID NUMBER(5),
+    FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID)
+);
+
+-- Step 3: Create Table - Patient
+CREATE TABLE Patient (
+    PatientID NUMBER(5) PRIMARY KEY,
+    Name VARCHAR2(50),
+    Age NUMBER(3),
+    Gender VARCHAR2(10),
+    Phone VARCHAR2(15),
+    Address VARCHAR2(100)
+);
+
+-- Step 4: Create Table - Appointment
+CREATE TABLE Appointment (
+    AppointmentID NUMBER(5) PRIMARY KEY,
+    PatientID NUMBER(5),
+    DoctorID NUMBER(5),
+    AppointmentDate DATE,
+    AppointmentTime VARCHAR2(10),
+    FOREIGN KEY (PatientID) REFERENCES Patient(PatientID),
+    FOREIGN KEY (DoctorID) REFERENCES Doctor(DoctorID)
+);
+
+-- Step 5: Create Table - Prescription
+CREATE TABLE Prescription (
+    PrescriptionID NUMBER(5) PRIMARY KEY,
+    AppointmentID NUMBER(5),
+    Diagnosis VARCHAR2(100),
+    Notes VARCHAR2(100),
+    FOREIGN KEY (AppointmentID) REFERENCES Appointment(AppointmentID)
+);
+
+-- Step 6: Create Table - Medicine
+CREATE TABLE Medicine (
+    MedicineID NUMBER(5) PRIMARY KEY,
+    Name VARCHAR2(50),
+    Dosage VARCHAR2(20),
+    Manufacturer VARCHAR2(50)
+);
+
+-- Step 7: Create Junction Table - Prescription_Medicine
+CREATE TABLE Prescription_Medicine (
+    PrescriptionID NUMBER(5),
+    MedicineID NUMBER(5),
+    PRIMARY KEY (PrescriptionID, MedicineID),
+    FOREIGN KEY (PrescriptionID) REFERENCES Prescription(PrescriptionID),
+    FOREIGN KEY (MedicineID) REFERENCES Medicine(MedicineID)
+);
+INSERT INTO Department VALUES (101, 'Cardiology', 'Block A');
+INSERT INTO Department VALUES (102, 'Neurology', 'Block B');
+
+INSERT INTO Doctor VALUES (1, 'Dr. Rajesh', 'Cardiologist', '9876543210', 101);
+INSERT INTO Doctor VALUES (2, 'Dr. Priya', 'Neurologist', '9876509876', 102);
+
+INSERT INTO Patient VALUES (11, 'Mohan', 45, 'Male', '9000000001', 'Hyderabad');
+INSERT INTO Patient VALUES (12, 'Lakshmi', 34, 'Female', '9000000002', 'Vijayawada');
+
+INSERT INTO Appointment VALUES (201, 11, 1, TO_DATE('2025-11-05','YYYY-MM-DD'), '10:00 AM');
+INSERT INTO Appointment VALUES (202, 12, 2, TO_DATE('2025-11-06','YYYY-MM-DD'), '11:00 AM');
+
+INSERT INTO Prescription VALUES (301, 201, 'Chest Pain', 'Take rest and regular checkup');
+INSERT INTO Prescription VALUES (302, 202, 'Migraine', 'Avoid stress and bright light');
+
+INSERT INTO Medicine VALUES (401, 'Paracetamol', '500mg', 'Cipla');
+INSERT INTO Medicine VALUES (402, 'Aspirin', '75mg', 'Sun Pharma');
+
+INSERT INTO Prescription_Medicine VALUES (301, 401);
+INSERT INTO Prescription_Medicine VALUES (302, 402);
+
+COMMIT;
+
+
+-- 1. List all appointments with doctor and patient details
+SELECT a.AppointmentID, p.Name AS PatientName, d.Name AS DoctorName, 
+       a.AppointmentDate, a.AppointmentTime
+FROM Appointment a
+JOIN Patient p ON a.PatientID = p.PatientID
+JOIN Doctor d ON a.DoctorID = d.DoctorID;
+
+-- 2. List prescriptions with medicine details
+SELECT pr.PrescriptionID, p.Name AS PatientName, m.Name AS MedicineName, m.Dosage
+FROM Prescription pr
+JOIN Appointment a ON pr.AppointmentID = a.AppointmentID
+JOIN Patient p ON a.PatientID = p.PatientID
+JOIN Prescription_Medicine pm ON pr.PrescriptionID = pm.PrescriptionID
+JOIN Medicine m ON pm.MedicineID = m.MedicineID;
+
+-- 3. Count total number of patients in each department
+SELECT d.DeptName, COUNT(a.PatientID) AS TotalPatients
+FROM Department d
+JOIN Doctor doc ON d.DepartmentID = doc.DepartmentID
+JOIN Appointment a ON doc.DoctorID = a.DoctorID
+GROUP BY d.DeptName;
+DECLARE
+    v_age NUMBER;
+BEGIN
+    SELECT Age INTO v_age FROM Patient WHERE PatientID = 11;
+    IF v_age < 18 THEN
+        DBMS_OUTPUT.PUT_LINE('Patient is a minor.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Patient is an adult.');
+    END IF;
+END;
+/
